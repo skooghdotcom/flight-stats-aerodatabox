@@ -6,24 +6,17 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "node scripts/check-secrets.js && wrangler deploy",
-    "deploy:staging": "wrangler deploy --env staging",
-    "tail": "wrangler tail",
-    "types": "wrangler types",
-    "check-secrets": "node scripts/check-secrets.js"
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
   },
   "keywords": [
     "flight",
     "aviation",
     "aerodatabox",
     "api",
-    "statistics",
     "cloudflare",
     "workers"
   ],
   "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "wrangler": "^4.125.0"
-  }
+  "license": "MIT"
 }
