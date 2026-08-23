@@ -1,4 +1,58 @@
-// Flight Stats - Cloudflare Worker with Workers Sites
+// Flight Stats - Cloudflare Worker with embedded static files
+
+// Embedded HTML
+const INDEX_HTML = `<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Stats - AeroDataBox</title>
+    <style>
+:root{--primary-color:#2563eb;--primary-hover:#1d4ed8;--bg-color:#f8fafc;--card-bg:#ffffff;--text-color:#1e293b;--text-muted:#64748b;--border-color:#e2e8f0;--success-color:#10b981;--error-color:#ef4444;--warning-color:#f59e0b}*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background-color:var(--bg-color);color:var(--text-color);line-height:1.6}.container{max-width:1200px;margin:0 auto;padding:2rem}header{text-align:center;margin-bottom:3rem}header h1{font-size:2.5rem;color:var(--primary-color);margin-bottom:.5rem}.subtitle{color:var(--text-muted);font-size:1.1rem}.search-section{background:var(--card-bg);padding:2rem;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,.1);margin-bottom:2rem}.search-form{display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end}.input-group{flex:1;min-width:200px}.input-group label{display:block;margin-bottom:.5rem;font-weight:600;color:var(--text-color)}.input-group input{width:100%;padding:.75rem;border:2px solid var(--border-color);border-radius:8px;font-size:1rem;transition:border-color .2s}.input-group input:focus{outline:none;border-color:var(--primary-color)}.search-btn{background-color:var(--primary-color);color:#fff;border:none;padding:.75rem 2rem;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;transition:background-color .2s}.search-btn:hover{background-color:var(--primary-hover)}.results-section{background:var(--card-bg);padding:2rem;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,.1);margin-bottom:2rem}.results-section h2{margin-bottom:1.5rem;color:var(--primary-color)}.loading{text-align:center;padding:3rem}.spinner{border:4px solid var(--border-color);border-top-color:var(--primary-color);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:0 auto 1rem}@keyframes spin{to{transform:rotate(360deg)}}.error{background-color:#fef2f2;color:var(--error-color);padding:1rem;border-radius:8px;border-left:4px solid var(--error-color);margin-bottom:1rem}.table-container{overflow-x:auto}table{width:100%;border-collapse:collapse;margin-top:1rem}thead{background-color:var(--primary-color);color:#fff}th,td{padding:1rem;text-align:left;border-bottom:1px solid var(--border-color)}th{font-weight:600;white-space:nowrap}tr:hover{background-color:var(--bg-color)}.status-landed{color:var(--success-color);font-weight:600}.status-delayed{color:var(--warning-color);font-weight:600}.status-cancelled{color:var(--error-color);font-weight:600}.info-section{background:var(--card-bg);padding:2rem;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,.1)}.info-section h3{margin-bottom:1rem;color:var(--primary-color)}.info-section p{margin-bottom:1rem;color:var(--text-muted)}.info-section a{color:var(--primary-color);text-decoration:none}.info-section a:hover{text-decoration:underline}footer{text-align:center;margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border-color);color:var(--text-muted)}footer a{color:var(--primary-color);text-decoration:none}footer a:hover{text-decoration:underline}@media(max-width:768px){.container{padding:1rem}header h1{font-size:2rem}.search-form{flex-direction:column}.input-group{width:100%}.search-btn{width:100%}th,td{padding:.75rem .5rem;font-size:.875rem}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✈️ Flight Stats</h1>
+            <p class="subtitle">Hitta gate-statistik för dina flighter</p>
+        </header>
+        <main>
+            <section class="search-section">
+                <form id="searchForm" class="search-form">
+                    <div class="input-group">
+                        <label for="flightNumber">Flight-nummer</label>
+                        <input type="text" id="flightNumber" name="flightNumber" placeholder="LH2415" required pattern="[A-Za-z]{2}[0-9]{1,4}" title="Ange flight-nummer (t.ex. LH2415)">
+                    </div>
+                    <div class="input-group">
+                        <label for="limit">Antal resultat</label>
+                        <input type="number" id="limit" name="limit" value="10" min="1" max="30">
+                    </div>
+                    <button type="submit" class="search-btn">SÖ¡k</button>
+                </form>
+            </section>
+            <section id="results" class="results-section" style="display: none;">
+                <h2 id="flightTitle">Flight Resultat</h2>
+                <div id="loading" class="loading" style="display: none;"><div class="spinner"></div><p>Laddar flight-data...</p></div>
+                <div id="error" class="error" style="display: none;"></div>
+                <div id="tableContainer" class="table-container"></div>
+            </section>
+            <section class="info-section">
+                <h3>Om denna app</h3>
+                <p>Denna webbapp använder <a href="https://rapidapi.com/aerodatabox/api/aerodatabox" target="_blank">AeroDataBox API</a> för att hämta flight-historik. Gratis-tier ger 600 API-enheter per månad.</p>
+                <p>Gate-data är "ibland tillgÃ¤nglig" enligt AeroDataBox dokumentation.</p>
+            </section>
+        </main>
+        <footer>
+            <p>Skapad med AeroDataBox API | <a href="https://github.com/skooghdotcom/flight-stats-aerodatabox">GitHub</a></p>
+        </footer>
+    </div>
+    <script>
+const API_BASE_URL="/api";document.addEventListener("DOMContentLoaded",()=>{const e=document.getElementById("searchForm"),t=document.getElementById("results"),n=document.getElementById("loading"),o=document.getElementById("error"),r=document.getElementById("tableContainer"),i=document.getElementById("flightTitle");e.addEventListener("submit",async s=>{s.preventDefault();const l=document.getElementById("flightNumber").value.trim().toUpperCase(),a=document.getElementById("limit").value||"10";if(!l)return showError("Ange ett flight-nummer");t.style.display="block",n.style.display="block",o.style.display="none",r.innerHTML="",i.textContent=`Flight ${l} - Historik`;try{const d=await fetchFlightHistory(l,a);n.style.display="none",displayResults(d)}catch(d){n.style.display="none",showError(d.message)}})});async function fetchFlightHistory(e,t){const n=await fetch(`${API_BASE_URL}/flight/${e}/history?limit=${t}`);if(!n.ok)throw n.status===401?new Error("Ogiltig API-nyckel. Kontrollera din AeroDataBox API-nyckel."):n.status===429?new Error("API-grÃ¤ns uppnÃ¥dd. VÃ¤nta eller uppgradera din plan."):n.status===404?new Error(`Ingen data hittades fÃ¶r flight ${e}`):new Error(`Fel vid hÃ¤mtning av data: ${n.status}`);return await n.json()}function displayResults(e){const t=document.getElementById("tableContainer");if(!e||!e.history||0===e.history.length)return void(t.innerHTML="<p>Ingen flight-historik hittades.</p>");const n=document.createElement("table");n.innerHTML="<thead><tr><th>Datum</th><th>FrÃ¥n</th><th>Till</th><th>Scheduled AvgÃ¥ng</th><th>Actual AvgÃ¥ng</th><th>Scheduled Ankomst</th><th>Actual Ankomst</th><th>Gate</th><th>Terminal</th><th>Status</th></tr></thead><tbody>"+e.history.map(o=>"<tr><td>"+formatDate(o.date)+"</td><td>"+(o.departureAirport||"-")+"</td><td>"+(o.arrivalAirport||"-")+"</td><td>"+(o.scheduledDeparture||"-")+"</td><td>"+(o.actualDeparture||"-")+"</td><td>"+(o.scheduledArrival||"-")+"</td><td>"+(o.actualArrival||"-")+"</td><td>"+(o.gate||"-")+"</td><td>"+(o.terminal||"-")+"</td><td class=\"status-"+getStatusClass(o.status)+"\">"+(o.status||"-")+"</td></tr>").join("")+"</tbody>`,t.appendChild(n)}function formatDate(e){if(!e)return"-";const t=new Date(e);return t.toLocaleDateString("sv-SE",{year:"numeric",month:"2-digit",day:"2-digit"})}function getStatusClass(e){if(!e)return"";const t=e.toLowerCase();return t.includes("landed")||t.includes("arrived")?"landed":t.includes("delayed")?"delayed":t.includes("cancelled")?"cancelled":""}function showError(e){const t=document.getElementById("error");t.textContent=e,t.style.display="block"}
+    </script>
+</body>
+</html>`;
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -21,8 +75,7 @@ export default {
         JSON.stringify({ 
           status: 'ok', 
           timestamp: new Date().toISOString(),
-          apiConfigured: !!env.AERODATABOX_API_KEY,
-          staticContentConfigured: !!env.__STATIC_CONTENT
+          apiConfigured: !!env.AERODATABOX_API_KEY 
         }),
         { 
           headers: { 
@@ -117,120 +170,13 @@ export default {
       }
     }
 
-    // Serve static files from Workers Sites
-    if (env.__STATIC_CONTENT) {
-      try {
-        // Remove leading slash and handle root
-        let assetName = url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\//, '');
-        
-        // Try to get asset from KV bucket
-        const asset = await env.__STATIC_CONTENT.get(assetName, 'arrayBuffer');
-        
-        if (asset) {
-          const contentType = getContentType(assetName);
-          const cacheHeaders = {
-            'Content-Type': contentType,
-            ...corsHeaders
-          };
-          
-          // Cache strategy
-          if (assetName.endsWith('.html')) {
-            cacheHeaders['Cache-Control'] = 'public, max-age=0, must-revalidate';
-          } else {
-            cacheHeaders['Cache-Control'] = 'public, max-age=31536000, immutable';
-          }
-          
-          return new Response(asset, {
-            headers: cacheHeaders
-          });
-        }
-        
-        // If asset not found, try index.html as fallback (for SPA routing)
-        if (!assetName.endsWith('.html')) {
-          const indexAsset = await env.__STATIC_CONTENT.get('index.html', 'arrayBuffer');
-          if (indexAsset) {
-            return new Response(indexAsset, {
-              headers: {
-                'Content-Type': 'text/html; charset=utf-8',
-                ...corsHeaders,
-                'Cache-Control': 'public, max-age=0, must-revalidate'
-              }
-            });
-          }
-        }
-        
-      } catch (e) {
-        console.error('Error serving static file:', e);
-        return new Response(
-          JSON.stringify({ 
-            error: 'Error serving static files',
-            message: e.message,
-            hint: 'Workers Sites may not be properly configured' 
-          }),
-          { 
-            status: 500,
-            headers: { 
-              ...corsHeaders, 
-              'Content-Type': 'application/json' 
-            } 
-          }
-        );
+    // Serve embedded HTML for root and unknown paths
+    return new Response(INDEX_HTML, {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        ...corsHeaders,
+        'Cache-Control': 'public, max-age=0, must-revalidate'
       }
-    }
-
-    // If no static content binding, return helpful error
-    if (!env.__STATIC_CONTENT) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Static content not configured',
-          message: 'Workers Sites binding missing. Check wrangler.toml [site] configuration.',
-          hint: 'Make sure public/ directory exists and wrangler.toml has [site] bucket = "./public"'
-        }),
-        { 
-          status: 500,
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
-          } 
-        }
-      );
-    }
-
-    // Fallback: return 404
-    return new Response(
-      JSON.stringify({ 
-        error: 'Not Found',
-        path: url.pathname,
-        hint: 'The requested resource was not found in Workers Sites'
-      }),
-      { 
-        status: 404,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    );
+    });
   }
 };
-
-// Helper function to determine content type
-function getContentType(path) {
-  const ext = path.split('.').pop().toLowerCase();
-  const contentTypes = {
-    'html': 'text/html; charset=utf-8',
-    'css': 'text/css; charset=utf-8',
-    'js': 'application/javascript; charset=utf-8',
-    'json': 'application/json; charset=utf-8',
-    'png': 'image/png',
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'gif': 'image/gif',
-    'svg': 'image/svg+xml',
-    'ico': 'image/x-icon',
-    'txt': 'text/plain',
-    'xml': 'application/xml',
-    'pdf': 'application/pdf'
-  };
-  return contentTypes[ext] || 'text/plain';
-}
