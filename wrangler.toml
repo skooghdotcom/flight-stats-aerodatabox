@@ -2,7 +2,7 @@ name = "flight-stats-aerodatabox"
 main = "worker.js"
 compatibility_date = "2024-08-23"
 
-# Workers Sites configuration
+# Workers Sites configuration (legacy method)
 [site]
 bucket = "./public"
 
@@ -21,8 +21,3 @@ command = "echo 'No build step needed'"
 
 # Enable minification
 minify = true
-
-# Optional: Custom domain
-# [[routes]]
-# pattern = "flight-stats.yourdomain.com"
-# zone_name = "yourdomain.com"
