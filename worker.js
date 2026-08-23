@@ -24,7 +24,11 @@ export default {
           apiConfigured: !!env.AERODATABOX_API_KEY 
         }),
         { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+          } 
         }
       );
     }
@@ -42,7 +46,11 @@ export default {
           }),
           { 
             status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate'
+            } 
           }
         );
       }
@@ -68,7 +76,11 @@ export default {
             }),
             { 
               status: response.status,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              headers: { 
+                ...corsHeaders, 
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+              } 
             }
           );
         }
@@ -77,7 +89,11 @@ export default {
         return new Response(
           JSON.stringify(data),
           { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json',
+              'Cache-Control': 'max-age=60, stale-while-revalidate=300' // 1 min cache, 5 min stale
+            } 
           }
         );
 
@@ -90,28 +106,38 @@ export default {
           }),
           { 
             status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate'
+            } 
           }
         );
       }
     }
 
     // Serve static files from Workers Sites
-    // Try to get asset from KV bucket
     if (env.__STATIC_CONTENT) {
       try {
-        // Remove leading slash for KV lookup
         const assetName = url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\//, '');
-        
         const asset = await env.__STATIC_CONTENT.get(assetName);
         
         if (asset) {
           const contentType = getContentType(assetName);
+          const cacheHeaders = {
+            'Content-Type': contentType,
+            ...corsHeaders
+          };
+          
+          // Cache strategy: HTML = no cache, Assets = 1 year
+          if (assetName.endsWith('.html')) {
+            cacheHeaders['Cache-Control'] = 'public, max-age=0, must-revalidate';
+          } else {
+            cacheHeaders['Cache-Control'] = 'public, max-age=31536000, immutable'; // 1 year
+          }
+          
           return new Response(asset, {
-            headers: {
-              'Content-Type': contentType,
-              ...corsHeaders
-            }
+            headers: cacheHeaders
           });
         }
       } catch (e) {
@@ -131,10 +157,10 @@ export default {
 function getContentType(path) {
   const ext = path.split('.').pop().toLowerCase();
   const contentTypes = {
-    'html': 'text/html',
-    'css': 'text/css',
-    'js': 'application/javascript',
-    'json': 'application/json',
+    'html': 'text/html; charset=utf-8',
+    'css': 'text/css; charset=utf-8',
+    'js': 'application/javascript; charset=utf-8',
+    'json': 'application/json; charset=utf-8',
     'png': 'image/png',
     'jpg': 'image/jpeg',
     'jpeg': 'image/jpeg',
