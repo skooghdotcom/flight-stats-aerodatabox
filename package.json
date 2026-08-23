@@ -1,0 +1,30 @@
+{
+  "name": "flight-stats-aerodatabox",
+  "version": "1.0.0",
+  "description": "Web app for flight statistics using AeroDataBox API",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "flight",
+    "aviation",
+    "aerodatabox",
+    "api",
+    "statistics"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.9.0"
+  }
+}
