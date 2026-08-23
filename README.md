@@ -9,6 +9,7 @@ En webbapp som hämtar flight-statistik via AeroDataBox API. Mata in ett flight-
 - Tabellformat med sortering
 - Responsiv design
 - Deployad på Cloudflare Workers (serverless)
+- Optimerad med cache headers och minifiering
 
 ## 🚀 Komma igÅ¥ng (Cloudflare Workers)
 
@@ -31,26 +32,40 @@ git clone https://github.com/skooghdotcom/flight-stats-aerodatabox.git
 cd flight-stats-aerodatabox
 ```
 
-### 4. Logga in pÅ¥ Cloudflare
+### 4. Installera dependencies
+
+```bash
+# Med npm
+npm install
+
+# Eller med bun (snabbare)
+bun install
+```
+
+### 5. Logga in pÅ¥ Cloudflare
 
 ```bash
 wrangler login
 ```
 
-### 5. SÃ¤tt API-nyckeln som secret
+### 6. SÃ¤tt API-nyckeln som secret
 
 ```bash
 wrangler secret put AERODATABOX_API_KEY
 # Klistra in din AeroDataBox API-nyckel nÃ¤r du blir tillfrÃ¥gad
 ```
 
-### 6. Deploya
+### 7. Deploya
 
 ```bash
+# Enkel deploy
 wrangler deploy
+
+# Eller med npm script
+npm run deploy
 ```
 
-### 7. Ã–ppna appen
+### 8. Ã–ppna appen
 
 Efter deployment fÅ¥r du en URL som:
 ```
@@ -62,7 +77,11 @@ https://flight-stats-aerodatabox.<ditt-subdomain>.workers.dev
 ### Starta utvecklingsserver
 
 ```bash
+# Med wrangler
 wrangler dev
+
+# Eller med npm script
+npm run dev
 ```
 
 Appen kÃ¶r nu pÅ¥ `http://localhost:8787`
@@ -72,7 +91,7 @@ Appen kÃ¶r nu pÅ¥ `http://localhost:8787`
 ```
 flight-stats-aerodatabox/
 â»¡â»°â»° README.md
-â»£â»°â»° index.html          # Frontend HTML
+â»£â»°â»° index.html          # Frontend HTML (root, fÃ¶r enkelhet)
 â»£â»°â»° styles.css          # CSS-styling
 â»£â»°â»° app.js              # Frontend JavaScript
 â»£â»°â»° worker.js           # Cloudflare Workers backend
@@ -80,7 +99,11 @@ flight-stats-aerodatabox/
 â»£â»°â»° package.json        # Dependencies
 â»£â»°â»° .env.example        # MiljÃ¶variabler (exempel)
 â»£â»°â»° .gitignore          # Git ignore
-â»£â»°â»° DEPLOYMENT.md       # Alternativ deployment (Node.js, Vercel, etc.)
+â»£â»°â»° public/             # Statiska filer fÃ¶r Workers Sites
+â»£â»°â»° â”œâ»°â»° index.html
+â»£â»°â»° â”œâ»°â»° styles.css
+â»£â»°â»° â””â»°â»° app.js
+â»£â»°â»° DEPLOYMENT.md       # Alternativ deployment
 â»£â»°â»° LICENSE             # MIT License
 ```
 
@@ -142,6 +165,26 @@ wrangler secret put AERODATABOX_API_KEY
 wrangler deploy
 ```
 
+### Build & Deploy Commands
+
+| Kommando | Beskrivning |
+|----------|-------------|
+| `wrangler dev` | Starta lokal utvecklingsserver |
+| `wrangler deploy` | Bygg och deploya till produktion |
+| `npm run dev` | Starta lokal utvecklingsserver |
+| `npm run deploy` | Deploya till produktion |
+| `wrangler tail` | Se live logs |
+| `wrangler secret put <NAME>` | SÃ¤tt hemlig variabel |
+
+### Optimeringar
+
+Projektet inkluderar fÃ¶ljande optimeringar:
+
+- **Minifiering:** JS/CSS minifieras automatiskt (`minify = true`)
+- **Cache headers:** Statiska filer cachelas i 1 Ã ¥r, HTML cachelas inte
+- **Gzip-komprimering:** Cloudflare hanterar automatiskt komprimering
+- **Build caching:** Lockfile (bun.lockb) fÃ¶r snabbare builds
+
 ### Alternativ: Node.js + Express
 
 Se `DEPLOYMENT.md` fÃ¶r alternativ som Node.js, Vercel, Netlify, Railway, etc.
@@ -156,6 +199,12 @@ Se `DEPLOYMENT.md` fÃ¶r alternativ som Node.js, Vercel, Netlify, Railway, etc.
 ### Gratis API-nycklar med ADS-B
 
 Om du har en ADS-B-mottagare kan du feed:a data till AeroDataBox och fÅ¥ API-credits. LÃ¤s mer pÅ¥ [aerodatabox.com/contribute](https://aerodatabox.com/contribute).
+
+### Snabbare builds
+
+1. AnvÃ¤nd `bun` istÃ¤llet fÃ¶r `npm` (snabbare installation)
+2. Commita lockfile (`bun.lockb`) fÃ¶r build caching
+3. Uppdatera till senaste Wrangler: `npm install --save-dev wrangler@4`
 
 ## Licens
 
