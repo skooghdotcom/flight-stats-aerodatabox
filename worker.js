@@ -39,7 +39,7 @@ const INDEX_HTML = `<!DOCTYPE html>
         </header>
         <main>
             <section class="search-section">
-                <form id="searchForm" class="search-form">
+                <form id="searchForm" class="search-form" onsubmit="handleSearch(event)">
                     <div class="input-group">
                         <label for="flightNumber">Flight-nummer</label>
                         <input type="text" id="flightNumber" name="flightNumber" placeholder="LH2415" required pattern="[A-Za-z]{2}[0-9]{1,4}" title="Ange flight-nummer (t.ex. LH2415)">
@@ -68,105 +68,103 @@ const INDEX_HTML = `<!DOCTYPE html>
         </footer>
     </div>
     <script>
-(function() {
-  var API_BASE_URL = "/api";
-  
-  function formatDate(dateStr) {
-    if (!dateStr) return "-";
-    var date = new Date(dateStr);
-    return date.toLocaleDateString("sv-SE", { year: "2-digit", month: "2-digit", day: "2-digit" });
+var API_BASE_URL = "/api";
+
+function formatDate(dateStr) {
+  if (!dateStr) return "-";
+  var date = new Date(dateStr);
+  return date.toLocaleDateString("sv-SE", { year: "2-digit", month: "2-digit", day: "2-digit" });
+}
+
+function getStatusClass(status) {
+  if (!status) return "";
+  var s = status.toLowerCase();
+  if (s.indexOf("landed") >= 0 || s.indexOf("arrived") >= 0) return "landed";
+  if (s.indexOf("delayed") >= 0) return "delayed";
+  if (s.indexOf("cancelled") >= 0) return "cancelled";
+  return "";
+}
+
+function showError(message) {
+  var errorEl = document.getElementById("error");
+  errorEl.textContent = message;
+  errorEl.style.display = "block";
+}
+
+function displayResults(flights) {
+  var container = document.getElementById("tableContainer");
+  if (!flights || flights.length === 0) {
+    container.innerHTML = "<p>Ingen flight-historik hittades.</p>";
+    return;
   }
   
-  function getStatusClass(status) {
-    if (!status) return "";
-    var s = status.toLowerCase();
-    if (s.indexOf("landed") >= 0 || s.indexOf("arrived") >= 0) return "landed";
-    if (s.indexOf("delayed") >= 0) return "delayed";
-    if (s.indexOf("cancelled") >= 0) return "cancelled";
-    return "";
+  var table = document.createElement("table");
+  var html = "<thead><tr><th>Datum</th><th>Fr</th><th>Till</th><th>Plan Avg</th><th>Fakt Avg</th><th>Plan Ank</th><th>Fakt Ank</th><th>Gate</th><th>Term</th><th>Status</th></tr></thead><tbody>";
+  
+  for (var i = 0; i < flights.length; i++) {
+    var flight = flights[i];
+    var depTime = (flight.departure && flight.departure.scheduledTime) ? flight.departure.scheduledTime.local : "-";
+    var actDepTime = (flight.departure && flight.departure.revisedTime) ? flight.departure.revisedTime.local : "-";
+    var arrTime = (flight.arrival && flight.arrival.scheduledTime) ? flight.arrival.scheduledTime.local : "-";
+    var actArrTime = (flight.arrival && flight.arrival.revisedTime) ? flight.arrival.revisedTime.local : "-";
+    var depAirport = (flight.departure && flight.departure.airport) ? flight.departure.airport.iata : "-";
+    var arrAirport = (flight.arrival && flight.arrival.airport) ? flight.arrival.airport.iata : "-";
+    var gate = (flight.arrival && flight.arrival.gate) ? flight.arrival.gate : "-";
+    var terminal = (flight.arrival && flight.arrival.terminal) ? flight.arrival.terminal : "-";
+    var dateStr = (arrTime !== "-") ? arrTime.split(" ")[0] : "-";
+    
+    html += "<tr>";
+    html += "<td>" + formatDate(dateStr) + "</td>";
+    html += "<td>" + depAirport + "</td>";
+    html += "<td>" + arrAirport + "</td>";
+    html += "<td>" + depTime + "</td>";
+    html += "<td>" + actDepTime + "</td>";
+    html += "<td>" + arrTime + "</td>";
+    html += "<td>" + actArrTime + "</td>";
+    html += "<td>" + gate + "</td>";
+    html += "<td>" + terminal + "</td>";
+    html += "<td class=\"status-" + getStatusClass(flight.status) + "\">" + (flight.status || "-") + "</td>";
+    html += "</tr>";
   }
   
-  function showError(message) {
-    var errorEl = document.getElementById("error");
-    errorEl.textContent = message;
-    errorEl.style.display = "block";
+  html += "</tbody>";
+  table.innerHTML = html;
+  container.appendChild(table);
+}
+
+function handleSearch(event) {
+  event.preventDefault();
+  
+  var flightNumber = document.getElementById("flightNumber").value.trim().toUpperCase();
+  var days = document.getElementById("days").value || "7";
+  
+  if (!flightNumber) {
+    showError("Ange ett flight-nummer");
+    return;
   }
   
-  function displayResults(flights) {
-    var container = document.getElementById("tableContainer");
-    if (!flights || flights.length === 0) {
-      container.innerHTML = "<p>Ingen flight-historik hittades.</p>";
-      return;
-    }
-    
-    var table = document.createElement("table");
-    var html = "<thead><tr><th>Datum</th><th>Fr</th><th>Till</th><th>Plan Avg</th><th>Fakt Avg</th><th>Plan Ank</th><th>Fakt Ank</th><th>Gate</th><th>Term</th><th>Status</th></tr></thead><tbody>";
-    
-    for (var i = 0; i < flights.length; i++) {
-      var flight = flights[i];
-      var depTime = (flight.departure && flight.departure.scheduledTime) ? flight.departure.scheduledTime.local : "-";
-      var actDepTime = (flight.departure && flight.departure.revisedTime) ? flight.departure.revisedTime.local : "-";
-      var arrTime = (flight.arrival && flight.arrival.scheduledTime) ? flight.arrival.scheduledTime.local : "-";
-      var actArrTime = (flight.arrival && flight.arrival.revisedTime) ? flight.arrival.revisedTime.local : "-";
-      var depAirport = (flight.departure && flight.departure.airport) ? flight.departure.airport.iata : "-";
-      var arrAirport = (flight.arrival && flight.arrival.airport) ? flight.arrival.airport.iata : "-";
-      var gate = (flight.arrival && flight.arrival.gate) ? flight.arrival.gate : "-";
-      var terminal = (flight.arrival && flight.arrival.terminal) ? flight.arrival.terminal : "-";
-      var dateStr = (arrTime !== "-") ? arrTime.split(" ")[0] : "-";
-      
-      html += "<tr>";
-      html += "<td>" + formatDate(dateStr) + "</td>";
-      html += "<td>" + depAirport + "</td>";
-      html += "<td>" + arrAirport + "</td>";
-      html += "<td>" + depTime + "</td>";
-      html += "<td>" + actDepTime + "</td>";
-      html += "<td>" + arrTime + "</td>";
-      html += "<td>" + actArrTime + "</td>";
-      html += "<td>" + gate + "</td>";
-      html += "<td>" + terminal + "</td>";
-      html += "<td class=\"status-" + getStatusClass(flight.status) + "\">" + (flight.status || "-") + "</td>";
-      html += "</tr>";
-    }
-    
-    html += "</tbody>";
-    table.innerHTML = html;
-    container.appendChild(table);
-  }
+  document.getElementById("results").style.display = "block";
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("error").style.display = "none";
+  document.getElementById("tableContainer").innerHTML = "";
+  document.getElementById("flightTitle").textContent = "Flight " + flightNumber + " - Historik";
   
-  document.getElementById("searchForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-    
-    var flightNumber = document.getElementById("flightNumber").value.trim().toUpperCase();
-    var days = document.getElementById("days").value || "7";
-    
-    if (!flightNumber) {
-      showError("Ange ett flight-nummer");
-      return;
-    }
-    
-    document.getElementById("results").style.display = "block";
-    document.getElementById("loading").style.display = "block";
-    document.getElementById("error").style.display = "none";
-    document.getElementById("tableContainer").innerHTML = "";
-    document.getElementById("flightTitle").textContent = "Flight " + flightNumber + " - Historik";
-    
-    fetch(API_BASE_URL + "/flight/" + flightNumber + "/history?days=" + days)
-      .then(function(response) {
-        if (!response.ok) {
-          throw new Error("Fel vid hamtning: " + response.status);
-        }
-        return response.json();
-      })
-      .then(function(data) {
-        document.getElementById("loading").style.display = "none";
-        displayResults(data);
-      })
-      .catch(function(error) {
-        document.getElementById("loading").style.display = "none";
-        showError(error.message);
-      });
-  });
-})();
+  fetch(API_BASE_URL + "/flight/" + flightNumber + "/history?days=" + days)
+    .then(function(response) {
+      if (!response.ok) {
+        throw new Error("Fel vid hamtning: " + response.status);
+      }
+      return response.json();
+    })
+    .then(function(data) {
+      document.getElementById("loading").style.display = "none";
+      displayResults(data);
+    })
+    .catch(function(error) {
+      document.getElementById("loading").style.display = "none";
+      showError(error.message);
+    });
+}
     </script>
 </body>
 </html>`;
