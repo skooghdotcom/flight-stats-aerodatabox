@@ -14,8 +14,8 @@ const INDEX_HTML = `<!DOCTYPE html>
 <body>
     <div class="container">
         <header>
-            <h1>✈️ Flight Stats</h1>
-            <p class="subtitle">Hitta gate-statistik för dina flighter</p>
+            <h1>Flight Stats</h1>
+            <p class="subtitle">Hitta gate-statistik for dina flighter</p>
         </header>
         <main>
             <section class="search-section">
@@ -28,7 +28,7 @@ const INDEX_HTML = `<!DOCTYPE html>
                         <label for="limit">Antal resultat</label>
                         <input type="number" id="limit" name="limit" value="10" min="1" max="30">
                     </div>
-                    <button type="submit" class="search-btn">SÖ¡k</button>
+                    <button type="submit" class="search-btn">Sok</button>
                 </form>
             </section>
             <section id="results" class="results-section" style="display: none;">
@@ -39,8 +39,8 @@ const INDEX_HTML = `<!DOCTYPE html>
             </section>
             <section class="info-section">
                 <h3>Om denna app</h3>
-                <p>Denna webbapp använder <a href="https://rapidapi.com/aerodatabox/api/aerodatabox" target="_blank">AeroDataBox API</a> för att hämta flight-historik. Gratis-tier ger 600 API-enheter per månad.</p>
-                <p>Gate-data är "ibland tillgÃ¤nglig" enligt AeroDataBox dokumentation.</p>
+                <p>Denna webbapp anvander <a href="https://rapidapi.com/aerodatabox/api/aerodatabox" target="_blank">AeroDataBox API</a> for att hamta flight-historik. Gratis-tier ger 600 API-enheter per manad.</p>
+                <p>Gate-data ar "ibland tillganglig" enligt AeroDataBox dokumentation.</p>
             </section>
         </main>
         <footer>
@@ -48,7 +48,7 @@ const INDEX_HTML = `<!DOCTYPE html>
         </footer>
     </div>
     <script>
-(function(){const API_BASE_URL="/api";function formatDate(e){if(!e)return"-";const t=new Date(e);return t.toLocaleDateString("sv-SE",{year:"numeric",month:"2-digit",day:"2-digit"})}function getStatusClass(e){if(!e)return"";const t=e.toLowerCase();return t.includes("landed")||t.includes("arrived")?"landed":t.includes("delayed")?"delayed":t.includes("cancelled")?"cancelled":""}function showError(e){const t=document.getElementById("error");t.textContent=e,t.style.display="block"}function displayResults(e){const t=document.getElementById("tableContainer");if(!e||!e.history||0===e.history.length)return void(t.innerHTML="<p>Ingen flight-historik hittades.</p>");const n=document.createElement("table");n.innerHTML="<thead><tr><th>Datum</th><th>FrÃ¥n</th><th>Till</th><th>Scheduled AvgÃ¥ng</th><th>Actual AvgÃ¥ng</th><th>Scheduled Ankomst</th><th>Actual Ankomst</th><th>Gate</th><th>Terminal</th><th>Status</th></tr></thead><tbody>"+e.history.map(function(o){return"<tr><td>"+formatDate(o.date)+"</td><td>"+(o.departureAirport||"-")+"</td><td>"+(o.arrivalAirport||"-")+"</td><td>"+(o.scheduledDeparture||"-")+"</td><td>"+(o.actualDeparture||"-")+"</td><td>"+(o.scheduledArrival||"-")+"</td><td>"+(o.actualArrival||"-")+"</td><td>"+(o.gate||"-")+"</td><td>"+(o.terminal||"-")+"</td><td class=\"status-"+getStatusClass(o.status)+"\">"+(o.status||"-")+"</td></tr>"}).join("")+"</tbody>",t.appendChild(n)}async function fetchFlightHistory(e,t){const n=await fetch(API_BASE_URL+"/flight/"+e+"/history?limit="+t);if(!n.ok)throw n.status===401?new Error("Ogiltig API-nyckel. Kontrollera din AeroDataBox API-nyckel."):n.status===429?new Error("API-grÃ¤ns uppnÃ¥dd. VÃ¤nta eller uppgradera din plan."):n.status===404?new Error("Ingen data hittades fÃ¶r flight "+e):new Error("Fel vid hÃ¤mtning av data: "+n.status);return await n.json()}document.addEventListener("DOMContentLoaded",function(){const e=document.getElementById("searchForm"),t=document.getElementById("results"),n=document.getElementById("loading"),o=document.getElementById("error"),r=document.getElementById("tableContainer"),i=document.getElementById("flightTitle");e.addEventListener("submit",async function(s){s.preventDefault();var l=document.getElementById("flightNumber").value.trim().toUpperCase(),a=document.getElementById("limit").value||"10";if(!l)return showError("Ange ett flight-nummer");t.style.display="block",n.style.display="block",o.style.display="none",r.innerHTML="",i.textContent="Flight "+l+" - Historik";try{var d=await fetchFlightHistory(l,a);n.style.display="none",displayResults(d)}catch(d){n.style.display="none",showError(d.message)}})})})();
+(function(){const API_BASE_URL="/api";function formatDate(e){if(!e)return"-";const t=new Date(e);return t.toLocaleDateString("sv-SE",{year:"numeric",month:"2-digit",day:"2-digit"})}function getStatusClass(e){if(!e)return"";const t=e.toLowerCase();return t.includes("landed")||t.includes("arrived")?"landed":t.includes("delayed")?"delayed":t.includes("cancelled")?"cancelled":""}function showError(e){const t=document.getElementById("error");t.textContent=e,t.style.display="block"}function displayResults(e){const t=document.getElementById("tableContainer");if(!e||!e.history||0===e.history.length)return void(t.innerHTML="<p>Ingen flight-historik hittades.</p>");const n=document.createElement("table");n.innerHTML="<thead><tr><th>Datum</th><th>Fran</th><th>Till</th><th>Scheduled Avgang</th><th>Actual Avgang</th><th>Scheduled Ankomst</th><th>Actual Ankomst</th><th>Gate</th><th>Terminal</th><th>Status</th></tr></thead><tbody>"+e.history.map(function(o){return"<tr><td>"+formatDate(o.date)+"</td><td>"+(o.departureAirport||"-")+"</td><td>"+(o.arrivalAirport||"-")+"</td><td>"+(o.scheduledDeparture||"-")+"</td><td>"+(o.actualDeparture||"-")+"</td><td>"+(o.scheduledArrival||"-")+"</td><td>"+(o.actualArrival||"-")+"</td><td>"+(o.gate||"-")+"</td><td>"+(o.terminal||"-")+"</td><td class=\"status-"+getStatusClass(o.status)+"\">"+(o.status||"-")+"</td></tr>"}).join("")+"</tbody>",t.appendChild(n)}async function fetchFlightHistory(e,t){const n=await fetch(API_BASE_URL+"/flight/"+e+"/history?limit="+t);if(!n.ok)throw n.status===401?new Error("Ogiltig API-nyckel. Kontrollera din AeroDataBox API-nyckel."):n.status===429?new Error("API-grans uppnadd. Vanta eller uppgradera din plan."):n.status===404?new Error("Ingen data hittades for flight "+e):new Error("Fel vid hamtning av data: "+n.status);return await n.json()}document.addEventListener("DOMContentLoaded",function(){const e=document.getElementById("searchForm"),t=document.getElementById("results"),n=document.getElementById("loading"),o=document.getElementById("error"),r=document.getElementById("tableContainer"),i=document.getElementById("flightTitle");e.addEventListener("submit",async function(s){s.preventDefault();var l=document.getElementById("flightNumber").value.trim().toUpperCase(),a=document.getElementById("limit").value||"10";if(!l)return showError("Ange ett flight-nummer");t.style.display="block",n.style.display="block",o.style.display="none",r.innerHTML="",i.textContent="Flight "+l+" - Historik";try{var d=await fetchFlightHistory(l,a);n.style.display="none",displayResults(d)}catch(d){n.style.display="none",showError(d.message)}})})})();
     </script>
 </body>
 </html>`;
@@ -96,7 +96,7 @@ export default {
       if (!env.AERODATABOX_API_KEY) {
         return new Response(
           JSON.stringify({ 
-            error: 'API-nyckel inte konfigurerad. SÃ¤tt AERODATABOX_API_KEY secret.' 
+            error: 'API-nyckel inte konfigurerad. Satt AERODATABOX_API_KEY secret.' 
           }),
           { 
             status: 500,
@@ -125,7 +125,7 @@ export default {
           
           return new Response(
             JSON.stringify({ 
-              error: `Fel frÃ¥n AeroDataBox API: ${response.status}`,
+              error: `Fel fran AeroDataBox API: ${response.status}`,
               details: errorData 
             }),
             { 
