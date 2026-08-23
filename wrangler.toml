@@ -2,7 +2,7 @@ name = "flight-stats-aerodatabox"
 main = "worker.js"
 compatibility_date = "2024-08-23"
 
-# Workers Sites configuration (legacy method)
+# Workers Sites configuration
 [site]
 bucket = "./public"
 
@@ -14,10 +14,3 @@ AERODATABOX_HOST = "aerodatabox.p.rapidapi.com"
 [dev]
 port = 8787
 local_protocol = "http"
-
-# Build optimizations
-[build]
-command = "echo 'No build step needed'"
-
-# Enable minification
-minify = true
