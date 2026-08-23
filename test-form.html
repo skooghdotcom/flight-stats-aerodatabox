@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Form - Flight Stats</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background: #f5f5dc;
+        }
+        .test-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 0.625rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        button {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 0.625rem 1.5rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+        button:hover {
+            background: #16a34a;
+        }
+        button:focus {
+            outline: 3px solid #2563eb;
+            outline-offset: 2px;
+        }
+        .log {
+            background: #1e293b;
+            color: #10b981;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .info { color: #60a5fa; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Form Submission</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Form with onsubmit handler</h2>
+        <form id="testForm1" onsubmit="handleSubmit1(event)">
+            <div class="form-group">
+                <label for="flight1">Flight Number:</label>
+                <input type="text" id="flight1" placeholder="LH1910" required>
+            </div>
+            <div class="form-group">
+                <label for="days1">Days:</label>
+                <input type="number" id="days1" value="7" min="1" max="7">
+            </div>
+            <button type="submit">Test Submit 1</button>
+            <button type="button" onclick="clearLog()">Clear Log</button>
+        </form>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Form with addEventListener</h2>
+        <form id="testForm2">
+            <div class="form-group">
+                <label for="flight2">Flight Number:</label>
+                <input type="text" id="flight2" placeholder="LH1910" required>
+            </div>
+            <div class="form-group">
+                <label for="days2">Days:</label>
+                <input type="number" id="days2" value="7" min="1" max="7">
+            </div>
+            <button type="submit">Test Submit 2</button>
+        </form>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Event Log</h2>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            logEl.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function handleSubmit1(event) {
+            event.preventDefault();
+            log('✅ Test 1: preventDefault() called', 'success');
+            log('✅ Test 1: Form will NOT submit to URL', 'info');
+            
+            const flight = document.getElementById('flight1').value;
+            const days = document.getElementById('days1').value;
+            log(`📝 Test 1: Flight=${flight}, Days=${days}`, 'info');
+            
+            // Simulate API call
+            log(`🔄 Test 1: Would call ${API_BASE}/flight/${flight}/history?days=${days}`, 'info');
+        }
+
+        // Test 2: Using addEventListener
+        document.getElementById('testForm2').addEventListener('submit', function(event) {
+            event.preventDefault();
+            log('✅ Test 2: preventDefault() called via addEventListener', 'success');
+            log('✅ Test 2: Form will NOT submit to URL', 'info');
+            
+            const flight = document.getElementById('flight2').value;
+            const days = document.getElementById('days2').value;
+            log(`📝 Test 2: Flight=${flight}, Days=${days}`, 'info');
+            
+            // Simulate API call
+            log(`🔄 Test 2: Would call ${API_BASE}/flight/${flight}/history?days=${days}`, 'info');
+        });
+
+        // Log page load
+        log('🚀 Page loaded - ready to test', 'success');
+        log('💡 Try: Tab to button, press Enter', 'info');
+        log('💡 Check: URL should NOT change after submit', 'info');
+    </script>
+</body>
+</html>
