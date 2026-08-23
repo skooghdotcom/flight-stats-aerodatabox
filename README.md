@@ -8,39 +8,66 @@ En webbapp som hämtar flight-statistik via AeroDataBox API. Mata in ett flight-
 - Visa senaste landningarna med gate, terminal, tid och status
 - Tabellformat med sortering
 - Responsiv design
+- Deployad på Cloudflare Workers (serverless)
 
-## Komma igÃ¥ng
+## 🚀 Komma igÅ¥ng (Cloudflare Workers)
 
 ### 1. Skaffa API-nyckel
 
-1. GÃ¥ till [AeroDataBox pÃ¥ RapidAPI](https://rapidapi.com/aerodatabox/api/aerodatabox)
-2. Prenumerera pÃ¥ gratis-tier (600 enheter/mÃ¥nad)
+1. GÅ¥ till [AeroDataBox pÅ¥ RapidAPI](https://rapidapi.com/aerodatabox/api/aerodatabox)
+2. Prenumerera pÅ¥ gratis-tier (600 enheter/mÅ¥nad)
 3. Kopiera din API-nyckel
 
-### 2. Konfigurera backend
+### 2. Installera Wrangler
 
 ```bash
-# Installera dependencies
-npm install
-
-# Kopiera .env.example till .env
-cp .env.example .env
-
-# Redigera .env och lÃ¤gg till din API-nyckel
-AERODATABOX_API_KEY=din_api_nyckel_hÃ¤r
+npm install -g wrangler
 ```
 
-### 3. Starta utvecklingsserver
+### 3. Klona repot
 
 ```bash
-npm run dev
+git clone https://github.com/skooghdotcom/flight-stats-aerodatabox.git
+cd flight-stats-aerodatabox
 ```
 
-### 4. Ã–ppna appen
+### 4. Logga in pÅ¥ Cloudflare
 
-GÃ¥ till `http://localhost:3000` i din webblÃ¤sare.
+```bash
+wrangler login
+```
 
-## Projektstruktur
+### 5. SÃ¤tt API-nyckeln som secret
+
+```bash
+wrangler secret put AERODATABOX_API_KEY
+# Klistra in din AeroDataBox API-nyckel nÃ¤r du blir tillfrÃ¥gad
+```
+
+### 6. Deploya
+
+```bash
+wrangler deploy
+```
+
+### 7. Ã–ppna appen
+
+Efter deployment fÅ¥r du en URL som:
+```
+https://flight-stats-aerodatabox.<ditt-subdomain>.workers.dev
+```
+
+## � ± Lokal utveckling
+
+### Starta utvecklingsserver
+
+```bash
+wrangler dev
+```
+
+Appen kÃ¶r nu pÅ¥ `http://localhost:8787`
+
+## � ¡ Projektstruktur
 
 ```
 flight-stats-aerodatabox/
@@ -48,16 +75,16 @@ flight-stats-aerodatabox/
 â»£â»°â»° index.html          # Frontend HTML
 â»£â»°â»° styles.css          # CSS-styling
 â»£â»°â»° app.js              # Frontend JavaScript
-â»£â»°â»° api.js              # Backend API (Node.js/Cloudflare Workers)
-â»£â»°â»° package.json        # Node.js dependencies
+â»£â»°â»° worker.js           # Cloudflare Workers backend
+â»£â»°â»° wrangler.toml       # Cloudflare Workers config
+â»£â»°â»° package.json        # Dependencies
 â»£â»°â»° .env.example        # MiljÃ¶variabler (exempel)
 â»£â»°â»° .gitignore          # Git ignore
-â»£â»°â»° wrangler.toml       # Cloudflare Workers config (valfritt)
-â»£â»°â»° worker.js           # Cloudflare Workers entry (valfritt)
-â»£â»°â»° server.js           # Node.js backend (valfritt)
+â»£â»°â»° DEPLOYMENT.md       # Alternativ deployment (Node.js, Vercel, etc.)
+â»£â»°â»° LICENSE             # MIT License
 ```
 
-## API-endpoints
+## ðŸ ''Œ API-endpoints
 
 ### `GET /api/flight/:flightNumber/history`
 
@@ -84,9 +111,22 @@ HÃ¤mtar historik fÃ¶r ett flight-nummer.
 }
 ```
 
-## Deployment
+### `GET /api/health`
 
-### Cloudflare Workers
+Health check endpoint.
+
+**Svar:**
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-08-23T08:53:00.000Z",
+  "apiConfigured": true
+}
+```
+
+## ðŸ‡¸ Deployment
+
+### Cloudflare Workers (Default)
 
 ```bash
 # Installera Wrangler
@@ -95,29 +135,27 @@ npm install -g wrangler
 # Logga in
 wrangler login
 
+# SÃ¤tt API-nyckel
+wrangler secret put AERODATABOX_API_KEY
+
 # Deploya
 wrangler deploy
 ```
 
-### Vercel
+### Alternativ: Node.js + Express
 
-```bash
-# Installera Vercel CLI
-npm install -g vercel
+Se `DEPLOYMENT.md` fÃ¶r alternativ som Node.js, Vercel, Netlify, Railway, etc.
 
-# Deploya
-vercel
-```
+## ðŸ'¸ Kostnader
 
-### Netlify
+- **Cloudflare Workers:** Gratis upp till 100,000 requests/dag
+- **AeroDataBox:** Gratis 600 API-enheter/mÅ¥nad (rÃ¤cker fÃ¶r ~20 requests/dag)
 
-```bash
-# Installera Netlify CLI
-npm install -g netlify-cli
+## ðŸ' Tips
 
-# Deploya
-netlify deploy --prod
-```
+### Gratis API-nycklar med ADS-B
+
+Om du har en ADS-B-mottagare kan du feed:a data till AeroDataBox och fÅ¥ API-credits. LÃ¤s mer pÅ¥ [aerodatabox.com/contribute](https://aerodatabox.com/contribute).
 
 ## Licens
 

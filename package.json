@@ -1,12 +1,13 @@
 {
   "name": "flight-stats-aerodatabox",
   "version": "1.0.0",
-  "description": "Web app for flight statistics using AeroDataBox API",
-  "main": "server.js",
+  "description": "Web app for flight statistics using AeroDataBox API on Cloudflare Workers",
+  "main": "worker.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
@@ -14,17 +15,13 @@
     "aviation",
     "aerodatabox",
     "api",
-    "statistics"
+    "statistics",
+    "cloudflare",
+    "workers"
   ],
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "node-fetch": "^3.3.2"
-  },
   "devDependencies": {
-    "eslint": "^9.9.0"
+    "wrangler": "^3.0.0"
   }
 }

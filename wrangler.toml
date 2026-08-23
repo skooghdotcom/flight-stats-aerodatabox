@@ -1,6 +1,6 @@
 name = "flight-stats-aerodatabox"
 main = "worker.js"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-08-23"
 
 # Environment variables
 [vars]
@@ -9,7 +9,16 @@ AERODATABOX_HOST = "aerodatabox.p.rapidapi.com"
 # Secrets (sÃ¤tt med: wrangler secret put AERODATABOX_API_KEY)
 # AERODATABOX_API_KEY
 
-# Optional: Configure routes
+# Development settings
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Production settings
+[site]
+bucket = "./public"
+
+# Optional: Custom domain
 # [[routes]]
 # pattern = "flight-stats.yourdomain.com"
 # zone_name = "yourdomain.com"
