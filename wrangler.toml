@@ -10,3 +10,9 @@ AERODATABOX_HOST = "aerodatabox.p.rapidapi.com"
 [dev]
 port = 8787
 local_protocol = "http"
+# Disable file watching to avoid .Trash permission errors on macOS
+watch = false
+
+# Disable bundling for simpler deployments
+[build]
+command = "echo 'No build needed'"
