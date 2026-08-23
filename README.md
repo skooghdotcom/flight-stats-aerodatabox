@@ -10,6 +10,7 @@ En webbapp som hämtar flight-statistik via AeroDataBox API. Mata in ett flight-
 - Responsiv design
 - Deployad på Cloudflare Workers (serverless)
 - Optimerad med cache headers och minifiering
+- API-nyckelvalidering
 
 ## 🚀 Komma igÅ¥ng (Cloudflare Workers)
 
@@ -17,7 +18,7 @@ En webbapp som hämtar flight-statistik via AeroDataBox API. Mata in ett flight-
 
 1. GÅ¥ till [AeroDataBox pÅ¥ RapidAPI](https://rapidapi.com/aerodatabox/api/aerodatabox)
 2. Prenumerera pÅ¥ gratis-tier (600 enheter/mÅ¥nad)
-3. Kopiera din API-nyckel
+3. Kopiera din API-nyckel (må·¨ste vara ≥32 tecken)
 
 ### 2. Installera Wrangler
 
@@ -51,21 +52,31 @@ wrangler login
 ### 6. SÃ¤tt API-nyckeln som secret
 
 ```bash
+# Detta maste goras manuellt av sakerhetsskal
 wrangler secret put AERODATABOX_API_KEY
-# Klistra in din AeroDataBox API-nyckel nÃ¤r du blir tillfrÃ¥gad
+
+# Klistra in din AeroDataBox API-nyckel nar du blir tillfragad
+# (den syns inte nar du skriver/pastar - det ar normalt!)
 ```
 
-### 7. Deploya
+### 7. Kontrollera att secreten ar satt
 
 ```bash
-# Enkel deploy
-wrangler deploy
-
-# Eller med npm script
-npm run deploy
+# Valfritt: Kor for-deploy check
+npm run check-secrets
 ```
 
-### 8. Ã–ppna appen
+### 8. Deploya
+
+```bash
+# Deploya (inkluderar automatisk secret-check)
+npm run deploy
+
+# Eller direkt med wrangler
+wrangler deploy
+```
+
+### 9. Ã–ppna appen
 
 Efter deployment fÅ¥r du en URL som:
 ```
@@ -103,6 +114,8 @@ flight-stats-aerodatabox/
 â»£â»°â»° â”œâ»°â»° index.html
 â»£â»°â»° â”œâ»°â»° styles.css
 â»£â»°â»° â””â»°â»° app.js
+â»£â»°â»° scripts/            # Helper scripts
+â»£â»°â»° â””â»°â»° check-secrets.js
 â»£â»°â»° DEPLOYMENT.md       # Alternativ deployment
 â»£â»°â»° LICENSE             # MIT License
 ```
@@ -136,14 +149,17 @@ HÃ¤mtar historik fÃ¶r ett flight-nummer.
 
 ### `GET /api/health`
 
-Health check endpoint.
+Health check endpoint med API-nyckelvalidering.
 
 **Svar:**
 ```json
 {
   "status": "ok",
   "timestamp": "2026-08-23T08:53:00.000Z",
-  "apiConfigured": true
+  "apiConfigured": true,
+  "apiKeyValid": true,
+  "apiKeyLength": 45,
+  "hint": "API-nyckel ser giltig ut"
 }
 ```
 
@@ -158,10 +174,13 @@ npm install -g wrangler
 # Logga in
 wrangler login
 
-# SÃ¤tt API-nyckel
+# SÃ¤tt API-nyckel (maste goras manuellt)
 wrangler secret put AERODATABOX_API_KEY
 
-# Deploya
+# Deploya (inkluderar automatisk secret-check)
+npm run deploy
+
+# Eller direkt
 wrangler deploy
 ```
 
@@ -172,18 +191,16 @@ wrangler deploy
 | `wrangler dev` | Starta lokal utvecklingsserver |
 | `wrangler deploy` | Bygg och deploya till produktion |
 | `npm run dev` | Starta lokal utvecklingsserver |
-| `npm run deploy` | Deploya till produktion |
+| `npm run deploy` | Deploya med secret-check |
+| `npm run check-secrets` | Kontrollera att secrets ar satt |
 | `wrangler tail` | Se live logs |
 | `wrangler secret put <NAME>` | SÃ¤tt hemlig variabel |
 
-### Optimeringar
+### Pre-deploy Check
 
-Projektet inkluderar fÃ¶ljande optimeringar:
+`npm run deploy` kÃ¶r automatiskt en check som verifierar att `AERODATABOX_API_KEY` Ãr satt innan deployment.
 
-- **Minifiering:** JS/CSS minifieras automatiskt (`minify = true`)
-- **Cache headers:** Statiska filer cachelas i 1 Ã ¥r, HTML cachelas inte
-- **Gzip-komprimering:** Cloudflare hanterar automatiskt komprimering
-- **Build caching:** Lockfile (bun.lockb) fÃ¶r snabbare builds
+Om secreten saknas fÅ¥r du ett tydligt felmeddelande med instruktioner.
 
 ### Alternativ: Node.js + Express
 
@@ -205,6 +222,12 @@ Om du har en ADS-B-mottagare kan du feed:a data till AeroDataBox och fÅ¥ API-c
 1. AnvÃ¤nd `bun` istÃ¤llet fÃ¶r `npm` (snabbare installation)
 2. Commita lockfile (`bun.lockb`) fÃ¶r build caching
 3. Uppdatera till senaste Wrangler: `npm install --save-dev wrangler@4`
+
+### API-nyckelhantering
+
+- API-nyckeln maste vara minst 32 tecken lang
+- Spara den som Cloudflare Secret, inte i kod eller .env
+- AnvÃ¤nd `/api/health` for att verifiera att nyckeln ar giltig
 
 ## Licens
 
