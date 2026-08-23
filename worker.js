@@ -1,5 +1,14 @@
 // Flight Stats - Cloudflare Worker with embedded static files
 
+// API Key validation
+function validateApiKey(apiKey) {
+  if (!apiKey || typeof apiKey !== 'string') {
+    return false;
+  }
+  // RapidAPI-nycklar är vanligtvis 32+ tecken
+  return apiKey.length >= 32;
+}
+
 // Embedded HTML
 const INDEX_HTML = `<!DOCTYPE html>
 <html lang="sv">
@@ -71,11 +80,16 @@ export default {
 
     // API endpoint: Health check
     if (url.pathname === '/api/health') {
+      const apiKeyValid = env.AERODATABOX_API_KEY && validateApiKey(env.AERODATABOX_API_KEY);
+      
       return new Response(
         JSON.stringify({ 
           status: 'ok', 
           timestamp: new Date().toISOString(),
-          apiConfigured: !!env.AERODATABOX_API_KEY 
+          apiConfigured: !!env.AERODATABOX_API_KEY,
+          apiKeyValid: apiKeyValid,
+          apiKeyLength: env.AERODATABOX_API_KEY ? env.AERODATABOX_API_KEY.length : 0,
+          hint: apiKeyValid ? 'API-nyckel ser giltig ut' : 'API-nyckel saknas eller är ogiltig (må·¨ste vara ≥32 tecken)'
         }),
         { 
           headers: { 
@@ -93,10 +107,31 @@ export default {
       const flightNumber = flightMatch[1].toUpperCase();
       const limit = url.searchParams.get('limit') || '10';
 
+      // Validera API-nyckel
       if (!env.AERODATABOX_API_KEY) {
         return new Response(
           JSON.stringify({ 
-            error: 'API-nyckel inte konfigurerad. Satt AERODATABOX_API_KEY secret.' 
+            error: 'API-nyckel inte konfigurerad',
+            hint: 'Satt AERODATABOX_API_KEY secret med: wrangler secret put AERODATABOX_API_KEY'
+          }),
+          { 
+            status: 500,
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate'
+            } 
+          }
+        );
+      }
+
+      if (!validateApiKey(env.AERODATABOX_API_KEY)) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Ogiltig API-nyckel',
+            hint: 'API-nyckeln maste vara minst 32 tecken lang. Kontrollera att du kopierat hela nyckeln fran RapidAPI.',
+            keyLength: env.AERODATABOX_API_KEY.length,
+            requiredLength: 32
           }),
           { 
             status: 500,
