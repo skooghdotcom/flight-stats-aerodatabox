@@ -42,11 +42,11 @@ const INDEX_HTML = `<!DOCTYPE html>
                 <form id="searchForm" class="search-form" onsubmit="handleSearch(event)">
                     <div class="input-group">
                         <label for="flightNumber">Flight-nummer</label>
-                        <input type="text" id="flightNumber" name="flightNumber" placeholder="LH2415" required pattern="[A-Za-z]{2}[0-9]{1,4}" title="Ange flight-nummer (t.ex. LH2415)">
+                        <input type="text" id="flightNumber" placeholder="LH2415" required pattern="[A-Za-z]{2}[0-9]{1,4}" title="Ange flight-nummer (t.ex. LH2415)">
                     </div>
                     <div class="input-group">
                         <label for="days">Dagar bakat (max 7)</label>
-                        <input type="number" id="days" name="days" value="7" min="1" max="7">
+                        <input type="number" id="days" value="7" min="1" max="7">
                     </div>
                     <button type="submit" class="search-btn" tabindex="0">SKICKA</button>
                 </form>
