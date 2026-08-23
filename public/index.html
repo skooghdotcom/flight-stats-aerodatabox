@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Stats - AeroDataBox</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✈️ Flight Stats</h1>
+            <p class="subtitle">Hitta gate-statistik för dina flighter</p>
+        </header>
+
+        <main>
+            <section class="search-section">
+                <form id="searchForm" class="search-form">
+                    <div class="input-group">
+                        <label for="flightNumber">Flight-nummer</label>
+                        <input 
+                            type="text" 
+                            id="flightNumber" 
+                            name="flightNumber" 
+                            placeholder="LH2415" 
+                            required
+                            pattern="[A-Za-z]{2}[0-9]{1,4}"
+                            title="Ange flight-nummer (t.ex. LH2415)"
+                        >
+                    </div>
+                    <div class="input-group">
+                        <label for="limit">Antal resultat</label>
+                        <input 
+                            type="number" 
+                            id="limit" 
+                            name="limit" 
+                            value="10" 
+                            min="1" 
+                            max="30"
+                        >
+                    </div>
+                    <button type="submit" class="search-btn">SÖ¡k</button>
+                </form>
+            </section>
+
+            <section id="results" class="results-section" style="display: none;">
+                <h2 id="flightTitle">Flight Resultat</h2>
+                <div id="loading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Laddar flight-data...</p>
+                </div>
+                <div id="error" class="error" style="display: none;"></div>
+                <div id="tableContainer" class="table-container"></div>
+            </section>
+
+            <section class="info-section">
+                <h3>Om denna app</h3>
+                <p>Denna webbapp använder <a href="https://rapidapi.com/aerodatabox/api/aerodatabox" target="_blank">AeroDataBox API</a> för att hämta flight-historik. Gratis-tier ger 600 API-enheter per månad.</p>
+                <p>Gate-data är "ibland tillgÃ¤nglig" enligt AeroDataBox dokumentation.</p>
+            </section>
+        </main>
+
+        <footer>
+            <p>Skapad med AeroDataBox API | <a href="https://github.com/skooghdotcom/flight-stats-aerodatabox">GitHub</a></p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
