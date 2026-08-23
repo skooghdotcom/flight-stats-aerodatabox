@@ -79,7 +79,86 @@ const INDEX_HTML = `<!DOCTYPE html>
         </footer>
     </div>
     <script>
-(function(){const API_BASE_URL="/api";function formatDate(e){if(!e)return"-";const t=new Date(e);return t.toLocaleDateString("sv-SE",{year:"numeric",month:"2-digit",day:"2-digit"})}function getStatusClass(e){if(!e)return"";const t=e.toLowerCase();return t.includes("landed")||t.includes("arrived")?"landed":t.includes("delayed")?"delayed":t.includes("cancelled")?"cancelled":""}function showError(e){const t=document.getElementById("error");t.textContent=e,t.style.display="block"}function displayResults(e){const t=document.getElementById("tableContainer");if(!e||!e.flights||0===e.flights.length)return void(t.innerHTML="<p>Ingen flight-historik hittades.</p>");const n=document.createElement("table");n.innerHTML="<thead><tr><th>Datum</th><th>Fran</th><th>Till</th><th>Scheduled Avgang</th><th>Actual Avgang</th><th>Scheduled Ankomst</th><th>Actual Ankomst</th><th>Gate</th><th>Terminal</th><th>Status</th></tr></thead><tbody>"+e.flights.map(function(o){return"<tr><td>"+formatDate(o.date)+"</td><td>"+(o.departureAirport||"-")+"</td><td>"+(o.arrivalAirport||"-")+"</td><td>"+(o.scheduledDeparture||"-")+"</td><td>"+(o.actualDeparture||"-")+"</td><td>"+(o.scheduledArrival||"-")+"</td><td>"+(o.actualArrival||"-")+"</td><td>"+(o.arrivalGate||"-")+"</td><td>"+(o.arrivalTerminal||"-")+"</td><td class=\"status-"+getStatusClass(o.status)+"\">"+(o.status||"-")+"</td></tr>"}).join("")+"</tbody>",t.appendChild(n)}async function fetchFlightHistory(e,t){const n=await fetch(API_BASE_URL+"/flight/"+e+"/history?days="+t);if(!n.ok)throw n.status===401?new Error("Ogiltig API-nyckel. Kontrollera din AeroDataBox API-nyckel."):n.status===429?new Error("API-grans uppnadd. Vanta eller uppgradera din plan."):n.status===404?new Error("Ingen data hittades for flight "+e):new Error("Fel vid hamtning av data: "+n.status);return await n.json()}document.addEventListener("DOMContentLoaded",function(){const e=document.getElementById("searchForm"),t=document.getElementById("results"),n=document.getElementById("loading"),o=document.getElementById("error"),r=document.getElementById("tableContainer"),i=document.getElementById("flightTitle");e.addEventListener("submit",async function(s){s.preventDefault();var l=document.getElementById("flightNumber").value.trim().toUpperCase(),a=document.getElementById("days").value||"7";if(!l)return showError("Ange ett flight-nummer");t.style.display="block",n.style.display="block",o.style.display="none",r.innerHTML="",i.textContent="Flight "+l+" - Historik";try{var d=await fetchFlightHistory(l,a);n.style.display="none",displayResults(d)}catch(d){n.style.display="none",showError(d.message)}})})})();
+(function(){
+  const API_BASE_URL="/api";
+  
+  function formatDate(e){
+    if(!e)return"-";
+    const t=new Date(e);
+    return t.toLocaleDateString("sv-SE",{year:"numeric",month:"2-digit",day:"2-digit"});
+  }
+  
+  function getStatusClass(e){
+    if(!e)return"";
+    const t=e.toLowerCase();
+    return t.includes("landed")||t.includes("arrived")?"landed":t.includes("delayed")?"delayed":t.includes("cancelled")?"cancelled":"";
+  }
+  
+  function showError(e){
+    const t=document.getElementById("error");
+    t.textContent=e;
+    t.style.display="block";
+  }
+  
+  function displayResults(e){
+    const t=document.getElementById("tableContainer");
+    if(!e||!e.flights||0===e.flights.length){
+      t.innerHTML="<p>Ingen flight-historik hittades.</p>";
+      return;
+    }
+    const n=document.createElement("table");
+    n.innerHTML="<thead><tr><th>Datum</th><th>Fran</th><th>Till</th><th>Scheduled Avgang</th><th>Actual Avgang</th><th>Scheduled Ankomst</th><th>Actual Ankomst</th><th>Gate</th><th>Terminal</th><th>Status</th></tr></thead><tbody>"+e.flights.map(function(o){
+      return"<tr><td>"+formatDate(o.date)+"</td><td>"+(o.departureAirport||"-")+"</td><td>"+(o.arrivalAirport||"-")+"</td><td>"+(o.scheduledDeparture||"-")+"</td><td>"+(o.actualDeparture||"-")+"</td><td>"+(o.scheduledArrival||"-")+"</td><td>"+(o.actualArrival||"-")+"</td><td>"+(o.arrivalGate||"-")+"</td><td>"+(o.arrivalTerminal||"-")+"</td><td class=\"status-"+getStatusClass(o.status)+"\">"+(o.status||"-")+"</td></tr>";
+    }).join("")+"</tbody>";
+    t.appendChild(n);
+  }
+  
+  async function fetchFlightHistory(e,t){
+    const n=await fetch(API_BASE_URL+"/flight/"+e+"/history?days="+t);
+    if(!n.ok){
+      const errText=await n.text();
+      throw new Error("Fel vid hamtning av data: "+n.status+" - "+errText);
+    }
+    return await n.json();
+  }
+  
+  document.addEventListener("DOMContentLoaded",function(){
+    const e=document.getElementById("searchForm");
+    const t=document.getElementById("results");
+    const n=document.getElementById("loading");
+    const o=document.getElementById("error");
+    const r=document.getElementById("tableContainer");
+    const i=document.getElementById("flightTitle");
+    
+    e.addEventListener("submit",async function(s){
+      s.preventDefault();
+      s.stopPropagation();
+      
+      const l=document.getElementById("flightNumber").value.trim().toUpperCase();
+      const a=document.getElementById("days").value||"7";
+      
+      if(!l){
+        showError("Ange ett flight-nummer");
+        return;
+      }
+      
+      t.style.display="block";
+      n.style.display="block";
+      o.style.display="none";
+      r.innerHTML="";
+      i.textContent="Flight "+l+" - Historik";
+      
+      try{
+        const d=await fetchFlightHistory(l,a);
+        n.style.display="none";
+        displayResults(d);
+      }catch(d){
+        n.style.display="none";
+        showError(d.message);
+      }
+    });
+  });
+})();
     </script>
 </body>
 </html>`;
