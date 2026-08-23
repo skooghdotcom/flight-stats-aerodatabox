@@ -21,7 +21,8 @@ export default {
         JSON.stringify({ 
           status: 'ok', 
           timestamp: new Date().toISOString(),
-          apiConfigured: !!env.AERODATABOX_API_KEY 
+          apiConfigured: !!env.AERODATABOX_API_KEY,
+          staticContentConfigured: !!env.__STATIC_CONTENT
         }),
         { 
           headers: { 
@@ -92,7 +93,7 @@ export default {
             headers: { 
               ...corsHeaders, 
               'Content-Type': 'application/json',
-              'Cache-Control': 'max-age=60, stale-while-revalidate=300' // 1 min cache, 5 min stale
+              'Cache-Control': 'max-age=60, stale-while-revalidate=300'
             } 
           }
         );
@@ -119,8 +120,11 @@ export default {
     // Serve static files from Workers Sites
     if (env.__STATIC_CONTENT) {
       try {
-        const assetName = url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\//, '');
-        const asset = await env.__STATIC_CONTENT.get(assetName);
+        // Remove leading slash and handle root
+        let assetName = url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\//, '');
+        
+        // Try to get asset from KV bucket
+        const asset = await env.__STATIC_CONTENT.get(assetName, 'arrayBuffer');
         
         if (asset) {
           const contentType = getContentType(assetName);
@@ -129,27 +133,84 @@ export default {
             ...corsHeaders
           };
           
-          // Cache strategy: HTML = no cache, Assets = 1 year
+          // Cache strategy
           if (assetName.endsWith('.html')) {
             cacheHeaders['Cache-Control'] = 'public, max-age=0, must-revalidate';
           } else {
-            cacheHeaders['Cache-Control'] = 'public, max-age=31536000, immutable'; // 1 year
+            cacheHeaders['Cache-Control'] = 'public, max-age=31536000, immutable';
           }
           
           return new Response(asset, {
             headers: cacheHeaders
           });
         }
+        
+        // If asset not found, try index.html as fallback (for SPA routing)
+        if (!assetName.endsWith('.html')) {
+          const indexAsset = await env.__STATIC_CONTENT.get('index.html', 'arrayBuffer');
+          if (indexAsset) {
+            return new Response(indexAsset, {
+              headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                ...corsHeaders,
+                'Cache-Control': 'public, max-age=0, must-revalidate'
+              }
+            });
+          }
+        }
+        
       } catch (e) {
         console.error('Error serving static file:', e);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Error serving static files',
+            message: e.message,
+            hint: 'Workers Sites may not be properly configured' 
+          }),
+          { 
+            status: 500,
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json' 
+            } 
+          }
+        );
       }
     }
 
+    // If no static content binding, return helpful error
+    if (!env.__STATIC_CONTENT) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Static content not configured',
+          message: 'Workers Sites binding missing. Check wrangler.toml [site] configuration.',
+          hint: 'Make sure public/ directory exists and wrangler.toml has [site] bucket = "./public"'
+        }),
+        { 
+          status: 500,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
+
     // Fallback: return 404
-    return new Response('Not Found', { 
-      status: 404,
-      headers: corsHeaders
-    });
+    return new Response(
+      JSON.stringify({ 
+        error: 'Not Found',
+        path: url.pathname,
+        hint: 'The requested resource was not found in Workers Sites'
+      }),
+      { 
+        status: 404,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    );
   }
 };
 
