@@ -14,7 +14,7 @@ AERODATABOX_HOST = "aerodatabox.p.rapidapi.com"
 port = 8787
 local_protocol = "http"
 
-# Production settings
+# Workers Sites configuration
 [site]
 bucket = "./public"
 

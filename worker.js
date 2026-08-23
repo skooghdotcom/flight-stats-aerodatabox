@@ -1,4 +1,4 @@
-// Flight Stats - Cloudflare Worker
+// Flight Stats - Cloudflare Worker with Workers Sites
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -7,7 +7,7 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, X-RapidAPI-Key, X-RapidAPI-Host',
     };
 
     // Handle CORS preflight
@@ -15,7 +15,7 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Health check endpoint
+    // API endpoint: Health check
     if (url.pathname === '/api/health') {
       return new Response(
         JSON.stringify({ 
@@ -29,7 +29,7 @@ export default {
       );
     }
 
-    // Flight history endpoint
+    // API endpoint: Flight history
     const flightMatch = url.pathname.match(/^\/api\/flight\/([A-Za-z0-9]+)\/history$/);
     if (flightMatch) {
       const flightNumber = flightMatch[1].toUpperCase();
@@ -96,20 +96,54 @@ export default {
       }
     }
 
-    // Serve static files from public directory
-    // (Du behÃ¶ver ladda upp statiska filer separat eller anvÃ¤nda Workers Sites)
-    // För enkelhet, redirecta till index.html
-    if (url.pathname === '/' || url.pathname === '/index.html') {
-      // I produktion, serve actual HTML file
-      return new Response(
-        '<h1>Flight Stats</h1><p>Deployera statiska filer separat eller anvÃ¤nd Workers Sites.</p>',
-        { 
-          headers: { 'Content-Type': 'text/html' } 
+    // Serve static files from Workers Sites
+    // Try to get asset from KV bucket
+    if (env.__STATIC_CONTENT) {
+      try {
+        // Remove leading slash for KV lookup
+        const assetName = url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\//, '');
+        
+        const asset = await env.__STATIC_CONTENT.get(assetName);
+        
+        if (asset) {
+          const contentType = getContentType(assetName);
+          return new Response(asset, {
+            headers: {
+              'Content-Type': contentType,
+              ...corsHeaders
+            }
+          });
         }
-      );
+      } catch (e) {
+        console.error('Error serving static file:', e);
+      }
     }
 
-    // 404 for unknown routes
-    return new Response('Not Found', { status: 404 });
+    // Fallback: return 404
+    return new Response('Not Found', { 
+      status: 404,
+      headers: corsHeaders
+    });
   }
 };
+
+// Helper function to determine content type
+function getContentType(path) {
+  const ext = path.split('.').pop().toLowerCase();
+  const contentTypes = {
+    'html': 'text/html',
+    'css': 'text/css',
+    'js': 'application/javascript',
+    'json': 'application/json',
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+    'svg': 'image/svg+xml',
+    'ico': 'image/x-icon',
+    'txt': 'text/plain',
+    'xml': 'application/xml',
+    'pdf': 'application/pdf'
+  };
+  return contentTypes[ext] || 'text/plain';
+}
